@@ -1,0 +1,87 @@
+[
+  {
+    "scenario_id": "LOGIN-001",
+    "title": "Successful login",
+    "steps": [
+      {
+        "description": "Verify that the user exists",
+        "tool": "check_user_exists",
+        "parameters": {
+          "username": "qa_user"
+        },
+        "expected_result": true
+      },
+      {
+        "description": "Validate user credentials",
+        "tool": "validate_credentials",
+        "parameters": {
+          "username": "qa_user",
+          "password": "correct_password"
+        },
+        "expected_result": true
+      },
+      {
+        "description": "Verify dashboard access",
+        "tool": "check_dashboard_access",
+        "parameters": {
+          "username": "qa_user"
+        },
+        "expected_result": true
+      }
+    ]
+  },
+  {
+    "scenario_id": "LOGIN-002",
+    "title": "Restricted user cannot access dashboard",
+    "steps": [
+      {
+        "description": "Verify that the user exists",
+        "tool": "check_user_exists",
+        "parameters": {
+          "username": "restricted_user"
+        },
+        "expected_result": true
+      },
+      {
+        "description": "Validate user credentials",
+        "tool": "validate_credentials",
+        "parameters": {
+          "username": "restricted_user",
+          "password": "correct_password"
+        },
+        "expected_result": true
+      },
+      {
+        "description": "Verify that dashboard access is denied",
+        "tool": "check_dashboard_access",
+        "parameters": {
+          "username": "restricted_user"
+        },
+        "expected_result": false
+      }
+    ]
+  },
+  {
+    "scenario_id": "LOGIN-003",
+    "title": "Unknown user cannot log in",
+    "steps": [
+      {
+        "description": "Verify that the user does not exist",
+        "tool": "check_user_exists",
+        "parameters": {
+          "username": "unknown_user"
+        },
+        "expected_result": false
+      },
+      {
+        "description": "Verify that credentials are rejected",
+        "tool": "validate_credentials",
+        "parameters": {
+          "username": "unknown_user",
+          "password": "correct_password"
+        },
+        "expected_result": false
+      }
+    ]
+  }
+]
