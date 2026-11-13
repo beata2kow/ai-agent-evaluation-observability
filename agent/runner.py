@@ -1,49 +1,64 @@
-
 import json
 from pathlib import Path
-
 from agent.main import run_scenario
 from agent.models import Scenario, GoldenDataset
 from evaluations.evaluator import evaluate_dataset
-
+from observability.recorder import TraceRecorder
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 SCENARIOS_PATH = PROJECT_ROOT / "datasets" / "login_scenarios.json"
 GOLDEN_DATASET_PATH = PROJECT_ROOT / "evaluations" / "golden_dataset.json"
 REPORT_PATH = PROJECT_ROOT / "reports" / "evaluation_report.json"
-
+TRACE_DIR = PROJECT_ROOT / "reports" / "traces"
 
 def load_scenarios() -> list[Scenario]:
     """Load and validate execution scenarios from JSON."""
     with SCENARIOS_PATH.open(encoding="utf-8") as file:
         raw_scenarios = json.load(file)
-
     return [
         Scenario.model_validate(item)
         for item in raw_scenarios
     ]
 
-
 def load_golden_dataset() -> GoldenDataset:
     """Load and validate the golden evaluation dataset."""
     with GOLDEN_DATASET_PATH.open(encoding="utf-8") as file:
         raw_dataset = json.load(file)
-
     return GoldenDataset.model_validate(raw_dataset)
+
+
+def save_trace(trace) -> Path:
+    """Save an agent execution trace as a JSON file."""
+    TRACE_DIR.mkdir(parents=True, exist_ok=True)
+
+    trace_path = TRACE_DIR / (
+        f"{trace.scenario_id}_{trace.run_id}.json"
+    )
+    trace_path.write_text(
+        trace.model_dump_json(indent=2),
+        encoding="utf-8",
+    )
+    return trace_path
 
 
 def main() -> None:
     """Execute scenarios, evaluate results and generate a report."""
-
     # 1. Load execution scenarios.
     scenarios = load_scenarios()
 
     # 2. Execute the agent against every scenario.
     agent_results = []
-
     for scenario in scenarios:
-        result = run_scenario(scenario)
+        trace_recorder = TraceRecorder(scenario.scenario_id)
+        try:
+            result = run_scenario(
+                scenario,
+                trace_recorder=trace_recorder,
+            )
+        finally:
+            trace_path = save_trace(trace_recorder.get_trace())
+            print(f"Trace saved to: {trace_path}")
         agent_results.append(result)
 
         print(f"\nScenario: {scenario.title}")
@@ -52,7 +67,6 @@ def main() -> None:
         print(
             f"Steps: {result.passed_steps}/{result.total_steps} passed"
         )
-
         for step in result.results:
             status = "PASS" if step.passed else "FAIL"
             print(f"  [{status}] {step.description}")
@@ -70,7 +84,6 @@ def main() -> None:
     print("\n" + "=" * 50)
     print("AGENT EVALUATION REPORT")
     print("=" * 50)
-
     print(f"Dataset: {report.dataset_name}")
     print(f"Version: {report.dataset_version}")
     print(f"Total scenarios: {report.total_scenarios}")
@@ -85,7 +98,6 @@ def main() -> None:
     print(f"Total steps: {report.total_steps}")
     print(f"Correct steps: {report.correct_steps}")
     print(f"Step accuracy: {report.step_accuracy:.2%}")
-
     print("\nScenario evaluation details:")
 
     for result in report.scenario_results:
@@ -103,9 +115,7 @@ def main() -> None:
         report.model_dump_json(indent=2),
         encoding="utf-8",
     )
-
     print(f"\nEvaluation report saved to: {REPORT_PATH}")
-
 
 if __name__ == "__main__":
     main()
