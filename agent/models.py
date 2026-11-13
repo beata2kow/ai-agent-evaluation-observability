@@ -36,3 +36,18 @@ class AgentRunResult(BaseModel):
     passed_steps: int
     failed_steps: int
     results: list[StepResult]
+
+
+class GoldenScenario(BaseModel):
+    """Reference expectations for evaluating one scenario."""
+    scenario_id: str
+    expected_agent_status: Literal["passed", "failed"]
+    expected_step_results: list[bool] = Field(min_length=1)
+
+
+class GoldenDataset(BaseModel):
+    """Collection of reference scenarios used for agent evaluation."""
+    dataset_name: str
+    dataset_version: str
+    description: str
+    scenarios: list[GoldenScenario] = Field(min_length=1)

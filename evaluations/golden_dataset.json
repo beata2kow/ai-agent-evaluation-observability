@@ -1,0 +1,23 @@
+
+{
+  "dataset_name": "login_agent_golden_dataset",
+  "dataset_version": "1.0.0",
+  "description": "Reference dataset for evaluating the QA login agent.",
+  "scenarios": [
+    {
+      "scenario_id": "LOGIN-001",
+      "expected_agent_status": "passed",
+      "expected_step_results": [true, true, true]
+    },
+    {
+      "scenario_id": "LOGIN-002",
+      "expected_agent_status": "passed",
+      "expected_step_results": [true, true, false]
+    },
+    {
+      "scenario_id": "LOGIN-003",
+      "expected_agent_status": "passed",
+      "expected_step_results": [false, false]
+    }
+  ]
+}
